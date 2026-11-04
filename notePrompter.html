@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>音程メモ＆再生</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+      body {
+        font-family:
+          "Inter",
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        touch-action: manipulation;
+        background-color: #0f172a;
+      }
+
+      /* 再生中のアニメーション */
+      @keyframes pulse-playing {
+        0% {
+          transform: scale(0.95);
+          opacity: 0.9;
+        }
+        50% {
+          transform: scale(1.08);
+          opacity: 1;
+          filter: brightness(1.2);
+        }
+        100% {
+          transform: scale(0.95);
+          opacity: 0.9;
+        }
+      }
+      .playing-btn {
+        animation: pulse-playing 0.8s infinite ease-in-out;
+        background-color: #10b981 !important; /* エメラルドグリーンで再生表示 */
+      }
+
+      /* カスタムスクロールバー */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0f172a;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 3px;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-[#0f172a] text-slate-100 min-h-screen flex flex-col selection:bg-indigo-500 selection:text-white"
+  >
+    <!-- ヘッダー（タイトル ＆ セット管理） -->
+    <header
+      class="bg-[#182234]/90 border-b border-slate-800/80 sticky top-0 z-50 px-3 py-2.5 backdrop-blur-md shadow-lg"
+    >
+      <div class="max-w-md mx-auto space-y-2">
+        <!-- 1行目: アプリタイトル & 削除/リセットボタン -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div
+              class="p-1.5 bg-gradient-to-tr from-indigo-600 to-violet-500 rounded-xl shadow-md shadow-indigo-500/30 flex items-center justify-center"
+            >
+              <svg
+                class="w-4 h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2.5"
+                  d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12 0c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                ></path>
+              </svg>
+            </div>
+            <h1 class="text-base font-bold text-white tracking-wide">
+              音程メモ＆再生
+            </h1>
+          </div>
+
+          <button
+            id="delete-preset-btn"
+            class="px-2.5 py-1 text-xs font-medium text-slate-400 hover:text-rose-400 bg-slate-800/80 hover:bg-slate-800 active:bg-slate-700 border border-slate-700/60 rounded-lg transition flex items-center gap-1"
+          >
+            <svg
+              class="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            削除
+          </button>
+        </div>
+
+        <!-- 2行目: セット選択・管理コントロール -->
+        <div class="grid grid-cols-12 gap-1.5 pt-0.5">
+          <!-- 既存セット選択ドロップダウン -->
+          <div class="col-span-5 relative">
+            <select
+              id="preset-select"
+              class="w-full bg-[#0f172a] text-indigo-200 font-semibold border border-indigo-500/30 rounded-lg pl-2 pr-5 py-1.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500 transition appearance-none cursor-pointer truncate"
+            >
+              <!-- 動的生成 -->
+            </select>
+            <div
+              class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-1 text-indigo-400"
+            >
+              <svg
+                class="w-3.5 h-3.5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M19 9l-7 7-7-7"
+                ></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- セット名入力 -->
+          <input
+            id="preset-name-input"
+            type="text"
+            placeholder="セット名..."
+            class="col-span-5 bg-[#0f172a] text-slate-200 border border-slate-700 rounded-lg px-2 py-1.5 text-xs placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
+          />
+
+          <!-- 保存ボタン -->
+          <button
+            id="save-preset-btn"
+            class="col-span-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium text-xs rounded-lg transition shadow-sm flex items-center justify-center"
+          >
+            保存
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- メイン領域 (10グループのリスト) -->
+    <main
+      class="max-w-md w-full mx-auto px-3 py-3 flex-1 flex flex-col justify-center"
+    >
+      <div id="groups-container" class="space-y-2.5">
+        <!-- JavaScriptで10個のカード行を生成 -->
+      </div>
+    </main>
+
+    <!-- 保存通知トースト -->
+    <div
+      id="toast"
+      class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-2 rounded-full shadow-xl shadow-indigo-950/50 text-xs font-semibold opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-1.5 z-50 translate-y-2"
+    >
+      <svg
+        class="w-4 h-4 text-emerald-300"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.5"
+          d="M5 13l4 4L19 7"
+        ></path>
+      </svg>
+      <span id="toast-message">保存しました</span>
+    </div>
+
+    <script>
+      // --- 音階定義 (C4〜C5: A4=440Hz基準) ---
+      const NOTE_LIST = [
+        { name: "C", freq: 261.63 },
+        { name: "C#", freq: 277.18 },
+        { name: "D", freq: 293.66 },
+        { name: "D#", freq: 311.13 },
+        { name: "E", freq: 329.63 },
+        { name: "F", freq: 349.23 },
+        { name: "F#", freq: 369.99 },
+        { name: "G", freq: 392.0 },
+        { name: "G#", freq: 415.3 },
+        { name: "A", freq: 440.0 },
+        { name: "A#", freq: 466.16 },
+        { name: "B", freq: 493.88 },
+        { name: "C5", freq: 523.25 },
+      ];
+
+      const TOTAL_GROUPS = 10;
+      const STORAGE_KEY_PRESETS = "note_memo_presets_v3";
+      const STORAGE_KEY_ACTIVE = "note_memo_active_preset_v3";
+
+      // Web Audio API Context
+      let audioCtx = null;
+
+      // 初期空データ構造
+      const createEmptyGroupData = () =>
+        Array.from({ length: TOTAL_GROUPS }, () => ({
+          text: "",
+          noteIndex: 0,
+        }));
+
+      // 状態管理
+      let presets = {
+        デフォルト: createEmptyGroupData(),
+      };
+      let activePresetName = "デフォルト";
+
+      // アプリケーション初期化
+      window.addEventListener("DOMContentLoaded", () => {
+        loadFromStorage();
+        renderGroupsUI();
+        updatePresetControls();
+        bindHeaderEvents();
+      });
+
+      // 10個のグループ要素を構築
+      function renderGroupsUI() {
+        const container = document.getElementById("groups-container");
+        container.innerHTML = "";
+
+        const currentData = presets[activePresetName] || createEmptyGroupData();
+
+        for (let i = 0; i < TOTAL_GROUPS; i++) {
+          const groupData = currentData[i] || { text: "", noteIndex: 0 };
+          const groupEl = createGroupCard(i, groupData);
+          container.appendChild(groupEl);
+        }
+      }
+
+      // 1つのカードグループを生成 (外枠カードの中に 説明, 音階, 再生ボタン)
+      function createGroupCard(index, data) {
+        const row = document.createElement("div");
+        // 画像同様の丸みのあるカードスタイル (背景 #182234 / 枠線 #222f46)
+        row.className =
+          "bg-[#182234] border border-[#23324a] rounded-2xl p-2 flex items-center gap-2 shadow-md transition-all";
+
+        // 音階の選択肢HTML
+        const optionsHtml = NOTE_LIST.map((note, idx) => {
+          const selected = idx === Number(data.noteIndex) ? "selected" : "";
+          return `<option value="${idx}" ${selected}>${note.name}</option>`;
+        }).join("");
+
+        row.innerHTML = `
+                <!-- 1. 説明（テキスト入力） -->
+                <div class="flex-1 min-w-0">
+                    <input id="input-${index}" type="text" value="${escapeHtml(data.text)}" placeholder="メモ..." class="w-full bg-[#0f172a] text-slate-100 border border-slate-700/60 rounded-xl px-3 py-2 text-sm placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition" />
+                </div>
+
+                <!-- 2. 音階（ドロップダウン） -->
+                <div class="relative w-20 flex-shrink-0">
+                    <select id="select-${index}" class="w-full bg-[#0f172a] text-white font-bold border border-slate-700/60 rounded-xl pl-3 pr-6 py-2 text-sm focus:outline-none focus:border-indigo-500 transition appearance-none cursor-pointer text-center">
+                        ${optionsHtml}
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-slate-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                </div>
+
+                <!-- 3. 再生ボタン（画像の鮮やかなパープル/ブルーボタン） -->
+                <button id="play-btn-${index}" aria-label="音を鳴らす" class="bg-[#5865f2] hover:bg-[#4752c4] active:bg-[#3c45a5] text-white p-2.5 rounded-xl flex-shrink-0 flex items-center justify-center transition shadow-lg shadow-indigo-900/30 h-10 w-10">
+                    <svg class="w-4 h-4 fill-current ml-0.5" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </button>
+            `;
+
+        // イベント割り当て
+        const selectEl = row.querySelector(`#select-${index}`);
+        const inputEl = row.querySelector(`#input-${index}`);
+        const playBtn = row.querySelector(`#play-btn-${index}`);
+
+        // 変更時はメモリ上のアクティブセットデータを自動更新
+        selectEl.addEventListener("change", (e) => {
+          const noteIdx = parseInt(e.target.value, 10);
+          presets[activePresetName][index].noteIndex = noteIdx;
+          autoSaveActivePreset();
+        });
+
+        inputEl.addEventListener("input", (e) => {
+          presets[activePresetName][index].text = e.target.value;
+          autoSaveActivePreset();
+        });
+
+        // 音再生
+        playBtn.addEventListener("click", () => {
+          const selectedIdx = parseInt(selectEl.value, 10);
+          const freq = NOTE_LIST[selectedIdx].freq;
+          playTone(freq, playBtn);
+        });
+
+        return row;
+      }
+
+      // Web Audio APIによる音再生（A4=440Hz基準, 2秒間）
+      function playTone(frequency, buttonEl) {
+        try {
+          if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          }
+          if (audioCtx.state === "suspended") {
+            audioCtx.resume();
+          }
+
+          const now = audioCtx.currentTime;
+          const duration = 2.0;
+
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(frequency, now);
+
+          // アタック＆フェードアウト
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.exponentialRampToValueAtTime(0.3, now + 0.04);
+          gain.gain.setValueAtTime(0.3, now + duration - 0.1);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          osc.start(now);
+          osc.stop(now + duration);
+
+          // 再生中表示
+          buttonEl.classList.add("playing-btn");
+          setTimeout(() => {
+            buttonEl.classList.remove("playing-btn");
+          }, duration * 1000);
+        } catch (err) {
+          console.error("Audio Playback Error:", err);
+        }
+      }
+
+      // --- データ永続化 (localStorage) ---
+      function loadFromStorage() {
+        try {
+          const savedPresets = localStorage.getItem(STORAGE_KEY_PRESETS);
+          if (savedPresets) {
+            presets = JSON.parse(savedPresets);
+          }
+          const savedActive = localStorage.getItem(STORAGE_KEY_ACTIVE);
+          if (savedActive && presets[savedActive]) {
+            activePresetName = savedActive;
+          } else {
+            activePresetName = Object.keys(presets)[0] || "デフォルト";
+          }
+        } catch (e) {
+          console.error("Failed to load local storage:", e);
+        }
+      }
+
+      function autoSaveActivePreset() {
+        try {
+          localStorage.setItem(STORAGE_KEY_PRESETS, JSON.stringify(presets));
+          localStorage.setItem(STORAGE_KEY_ACTIVE, activePresetName);
+        } catch (e) {
+          console.error("Failed to save to local storage:", e);
+        }
+      }
+
+      // ヘッダーのコントロール類をセット状態に同期
+      function updatePresetControls() {
+        const select = document.getElementById("preset-select");
+        select.innerHTML = "";
+
+        Object.keys(presets).forEach((name) => {
+          const opt = document.createElement("option");
+          opt.value = name;
+          opt.textContent = name;
+          if (name === activePresetName) opt.selected = true;
+          select.appendChild(opt);
+        });
+
+        document.getElementById("preset-name-input").value = activePresetName;
+      }
+
+      // ヘッダーボタンのイベントバインド
+      function bindHeaderEvents() {
+        const presetSelect = document.getElementById("preset-select");
+        const saveBtn = document.getElementById("save-preset-btn");
+        const deleteBtn = document.getElementById("delete-preset-btn");
+        const nameInput = document.getElementById("preset-name-input");
+
+        // セット切替
+        presetSelect.addEventListener("change", (e) => {
+          activePresetName = e.target.value;
+          localStorage.setItem(STORAGE_KEY_ACTIVE, activePresetName);
+          nameInput.value = activePresetName;
+          renderGroupsUI();
+          showToast(`「${activePresetName}」を表示中`);
+        });
+
+        // セット保存
+        saveBtn.addEventListener("click", () => {
+          const newName = nameInput.value.trim();
+          if (!newName) {
+            showToast("セット名を入力してください");
+            return;
+          }
+
+          // 現在の入力UIから最新データを吸い上げて保存
+          const currentData = [];
+          for (let i = 0; i < TOTAL_GROUPS; i++) {
+            const textVal = document.getElementById(`input-${i}`).value;
+            const noteIdxVal = parseInt(
+              document.getElementById(`select-${i}`).value,
+              10,
+            );
+            currentData.push({ text: textVal, noteIndex: noteIdxVal });
+          }
+
+          presets[newName] = currentData;
+          activePresetName = newName;
+          autoSaveActivePreset();
+          updatePresetControls();
+          showToast(`「${newName}」に保存しました`);
+        });
+
+        // セット削除
+        deleteBtn.addEventListener("click", () => {
+          const keys = Object.keys(presets);
+          if (keys.length <= 1) {
+            showToast("これ以上セットを削除できません");
+            return;
+          }
+
+          if (confirm(`セット「${activePresetName}」を削除しますか？`)) {
+            delete presets[activePresetName];
+            activePresetName = Object.keys(presets)[0];
+            autoSaveActivePreset();
+            updatePresetControls();
+            renderGroupsUI();
+            showToast("削除しました");
+          }
+        });
+      }
+
+      // トースト通知
+      let toastTimeout;
+      function showToast(msg) {
+        const toast = document.getElementById("toast");
+        const toastMsg = document.getElementById("toast-message");
+        toastMsg.textContent = msg;
+
+        toast.classList.remove("opacity-0", "translate-y-2");
+        toast.classList.add("opacity-100", "translate-y-0");
+
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => {
+          toast.classList.remove("opacity-100", "translate-y-0");
+          toast.classList.add("opacity-0", "translate-y-2");
+        }, 1500);
+      }
+
+      // エスケープ処理
+      function escapeHtml(str) {
+        if (!str) return "";
+        return str
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+    </script>
+  </body>
+</html>
