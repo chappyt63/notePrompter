@@ -6,7 +6,7 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-    <title>Note Prompter - 音程メモ＆再生 | ChappyLabo</title>
+    <title>Note Prompter - 音程メモ＆再生</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -87,8 +87,10 @@
 
             <span class="text-slate-600 font-light">|</span>
 
-            <h1 class="text-sm font-bold text-white tracking-wide truncate">
-              Note Prompter
+            <h1
+              class="text-xs sm:text-sm font-bold text-white tracking-wide truncate"
+            >
+              Note Prompter - 音程メモ＆再生
             </h1>
           </div>
 
@@ -169,7 +171,7 @@
         <!-- JavaScriptで10個のカード行を生成 -->
       </div>
 
-      <!-- 利用ガイド（アコーディオン） -->
+      <!-- 利用ガイド＆免責事項（アコーディオン） -->
       <details
         class="bg-[#182234] border border-[#23324a] rounded-xl text-slate-300 text-xs overflow-hidden group"
       >
@@ -190,7 +192,7 @@
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            使い方ガイド
+            使い方ガイド ＆ 免責事項
           </span>
           <svg
             class="w-4 h-4 transition-transform group-open:rotate-180"
@@ -207,20 +209,40 @@
           </svg>
         </summary>
         <div
-          class="px-3.5 pb-3 pt-1 space-y-2 border-t border-slate-800/80 leading-relaxed text-slate-400"
+          class="px-3.5 pb-3 pt-1 space-y-2.5 border-t border-slate-800/80 leading-relaxed text-slate-400"
         >
-          <p>
-            <strong class="text-slate-200">1. 音の確認・再生:</strong>
-            ドロップダウンで指定した音階（C〜B）を右側の再生ボタンで2秒間再生します。
-          </p>
-          <p>
-            <strong class="text-slate-200">2. メモの記録:</strong>
-            各行に歌詞やパート名などのメモを入力できます（自動保存）。
-          </p>
-          <p>
-            <strong class="text-slate-200">3. セット管理:</strong>
-            ヘッダーでセット名の変更や新規保存、切り替え、削除が可能です。
-          </p>
+          <div>
+            <p class="font-semibold text-slate-300 mb-1">【使い方】</p>
+            <p>
+              1.
+              <strong>音の確認・再生:</strong>
+              ドロップダウンで指定した音階（C〜B）を右側の再生ボタンで2秒間再生します。
+            </p>
+            <p>
+              2.
+              <strong>メモの記録:</strong>
+              各行に歌詞やパート名などのメモを入力できます（自動保存）。
+            </p>
+            <p>
+              3.
+              <strong>セット管理:</strong>
+              ヘッダーでセット名の変更や新規保存、切り替え、削除が可能です。
+            </p>
+          </div>
+          <div class="pt-1 border-t border-slate-800/60">
+            <p class="font-semibold text-slate-300 mb-1">
+              【データ・免責事項】
+            </p>
+            <p>
+              •
+              入力されたデータはすべてお使いのブラウザ内（ローカルストレージ）に保存され、サーバー等で保管されることはありません。
+            </p>
+            <p>• データの保存性や完全性に関する保証は一切いたしません。</p>
+            <p>
+              •
+              本アプリの利用、または利用できなかったことによって発生したいかなるトラブルや損害等についても、一切の責任および補償を負いかねますのであらかじめご了承ください。
+            </p>
+          </div>
         </div>
       </details>
     </main>
